@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>自动完成</title>
+	</head>
+	<style>
+		body{
+			background: #FFFFCF;
+			padding: 0;
+			margin: 0;
+		}
+		#container{
+			width: 900px;
+			height: 700px;
+			background: white;
+			margin: 0 auto;
+		}
+		#backAll,#backThis,#help,#status{
+			width: 80px;
+			height: 30px;
+			border: 4px #fffccf solid;
+			background: white;
+			border-radius: 8px;
+			margin-top: 10px;
+			outline: none; 
+		}
+		#game{
+			margin: 20px 0px 0px 20px;
+			width: 560px;
+			height: 560px;
+			border-top: 5px solid black;
+			border-right: 5px solid black;
+			border-radius: 10px;
+			padding: 0;
+		}
+		ul{
+			margin: 0;
+			padding: 0;
+		}
+		li{
+			padding: 0;
+			margin: 0;
+			list-style: none;
+			border-left: 5px solid black;
+			border-bottom: 5px solid black;
+			float: left;
+			background: #ea971f;
+		}
+		#express{
+			margin-left: 650px;
+		}
+	</style>
+	<body>
+		<div id="container">
+			<input type="button" id="backAll" value="重玩游戏"/>
+			<input type="button" id="backThis" value="重玩本关"/>
+			<input type="button" id="help" value="辅助方块"/>
+			<input type="button" id="status" value="游戏说明"/>
+			<div id="express">
+				<span id="myLevel">关卡：1</span>
+				<span id="myStep">步数：0</span>
+			</div>			
+			<div id="game">
+				<ul id="box">
+				</ul>
+			</div>
+		</div>
+	</body>
+</html>
+<script>
+	window.onload= function(){
+		var Obox = document.getElementById('box');
+		var Ostep = document.getElementById('myStep');
+		var Olevel = document.getElementById('myLevel');
+		var ObackAll = document.getElementById('backAll');
+		var ObackThis = document.getElementById('backThis');
+		var Ohelp = document.getElementById('help');
+		var Ostatus = document.getElementById('status');
+		var ObChild = document.getElementsByClassName('boxChild');
+		
+		var num = 10;//一行的方块数量
+		var need =2;//一半需要的方块数
+		var Oli = [];//储存
+		var arr = [];//储存组合数
+		var step = 0; //步数
+		var actual;		
+		var check_flag = false;
+		
+		if(num % 2 ==0){
+			actual= num/2;
+		}else{
+			actual = parseInt(num/2)+1;
+		}
+		
+		zuhe(arr,actual,need);
+		changeBox(num,Oli);
+		
+		var add=0;
+		for(var i=0;i<arr.length;i++){
+			var temp = arr[i].concat().reverse();
+			arr[i] = arr[i].concat(temp);
+		}
+		
+		//改变方块的个数
+		function changeBox(num,Oli){
+			let decent = num*5;
+			let real = 560-decent;
+			for(var i=0;i<num*num;i++){
+				let myLi = document.createElement('li');
+				myLi.classList.add("boxChild");
+				Oli.push(myLi);
+				Obox.appendChild(Oli[i]);
+				Oli[i].style.width = real/num +"px";
+				Oli[i].style.height = real/num +"px";
+				Oli[i].setAttribute("data-uid",i);
+				Oli[i].setAttribute("data-usta",0);
+				Oli[i].style.background = "#ea971f";
+				run(Oli,i,num);
+			}
+		}
+		function run(Oli,i,num){
+			var obj = Oli[i];
+			var flag = false;
+			obj.onclick= function(){
+				step ++;
+				Ostep.innerHTML = "步数："+step;
+				allLryb(i,Oli,num);
+				flag = exam(Oli,num);
+				if(flag){
+					num = num +1;
+					Olevel.innerHTML = `关卡：${num}`;
+					setTimeout(function(){changeBox(num,Oli);},300);
+				}
+			}
+		}
+		//改变颜色
+		function oneLryb(obj){
+			if(obj.getAttribute('data-usta') == 0){
+				obj.style.background = "#5283a3";
+				obj.setAttribute("data-usta",1);
+			}else if(obj.getAttribute('data-usta') == 1){
+				obj.style.background = "#ea971f";
+				obj.setAttribute("data-usta",0);
+			}
+		}
+		function allLryb(i,Oli,num){
+			var k = i;
+			for(var j=0;j<5;j++){
+				switch(j){
+					case 0: i = k;oneLryb(Oli[i]);break;
+					case 1:{
+						if(i%num-1>=0){
+							i = i-1;
+							oneLryb(Oli[i]);
+							i=k;
+						}else{
+							i=k;
+						}
+						break;
+					}
+					case 2:
+						if((i%num+1)<num){
+							i = i+1;
+							oneLryb(Oli[i]);
+							i=k;
+						}
+						break;
+					
+					case 3:
+						if(i-num >=0){
+							i = i-num;
+							oneLryb(Oli[i]);
+							i=k;
+						}
+						break;
+					case 4:
+						if(num*num >i+num){
+							i = i+num;
+							oneLryb(Oli[i]);
+							i=k;
+						}
+						break;
+				}
+			}
+		}
+		//检查是否所有方块都改变颜色
+		function exam(obj,num){
+			for(var i=0;i<num*num;i++){
+				if(obj[i].getAttribute('data-usta') ==0){
+					return false;
+				}else if(obj[i].getAttribute('data-usta') ==1 && i+1==num*num){
+					return true;
+				}
+			}
+		}
+
+		//flag1 = 1:清空界面，回到原始界面
+		//flag1 = 0：进行自动点击；
+		var flag1 = 0;
+		
+		Ohelp.onclick = function(){
+
+			if(flag1 ==1){
+				changeBox(num,Oli);
+				flag1=0;
+			}else{
+				if(add<arr.length){
+					//让第一行发生变化
+					for(var j=0;j<arr[add].length;j++){
+						if(arr[add][j]==1){
+							allLryb(j,Oli,num);
+//							console.log(j);
+						}
+					}
+					//让剩下的行发生变化
+					check(num);
+					if(check_flag){
+						console.log(arr[add-1]);
+					}
+					add++;
+				}
+				flag1 = 1;
+			}
+		}
+		var check_i =-1;
+
+		
+		function check(num){
+			check_i++;
+			if(check_i+num<num*num){
+				if(Oli[check_i].getAttribute('data-usta') ==0){
+					var it = check_i+num;
+					setTimeout(function(){
+						allLryb(it,Oli,num);
+						check(num);
+						check_i = -1;
+					},1);
+					
+				}else{
+					check(num);
+				}
+				
+			}else{
+				if(exam(Oli,num)){
+					check_flag = true;
+				}else{
+					check_flag = false;
+				}
+				
+			}
+
+		}		
+		function zuhe(arr,actual,need){
+			var sonArr =  [];
+			var flag2 = false;
+			//初始化
+			for(var i= 0;i<actual;i++){
+				if(i<need){
+					sonArr.push(1);
+				}else{
+					sonArr.push(0);
+				}
+			}
+			var temp =sonArr.concat();
+			//将该组合放到arr里面去；
+			arr.push(temp);
+			while(!flag2){
+				//将10变成01 并将左侧的1移动到最左侧；
+				for(var i = 0;i<sonArr.length;i++){
+					if(sonArr[i] == 1 && sonArr[i+1] ==0){
+						sonArr[i] = 0;
+						sonArr[i+1] =1;
+						var sum = 0;
+						for(var j=0;j<i;j++){
+							if(sonArr[j] ==1){
+								sonArr[j] = 0;
+								sonArr[sum] = 1;
+								sum++;
+							}
+						}
+						break;
+					}
+				}
+				temp =sonArr.concat();
+				arr.push(temp);
+				//如果1全部移动到最右侧，则完成组合；
+				for(var k=sonArr.length-need;k<sonArr.length;k++){
+					if(sonArr[k]==1){
+						if(k==sonArr.length-1){
+							flag2 = true;
+						}
+					}else{
+						flag2 =false;
+						break;
+					}
+				}
+			}
+			console.log(arr);
+		}
+	}
+</script>

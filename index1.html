@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+	</head>
+	<style>
+		body{
+			background: #FFFFCF;
+			padding: 0;
+			margin: 0;
+		}
+		#container{
+			width: 900px;
+			height: 700px;
+			background: white;
+			margin: 0 auto;
+		}
+		#backAll,#backThis,#help,#status{
+			width: 80px;
+			height: 30px;
+			border: 4px #fffccf solid;
+			background: white;
+			border-radius: 8px;
+			margin-top: 10px;
+			outline: none; 
+		}
+		#game{
+			margin: 20px 0px 0px 20px;
+			width: 560px;
+			height: 560px;
+			border-top: 5px solid black;
+			border-right: 5px solid black;
+			border-radius: 10px;
+			padding: 0;
+		}
+		ul{
+			margin: 0;
+			padding: 0;
+		}
+		li{
+			padding: 0;
+			margin: 0;
+			list-style: none;
+			border-left: 5px solid black;
+			border-bottom: 5px solid black;
+			float: left;
+			background: #ea971f;
+		}
+		#express{
+			margin-left: 650px;
+		}
+
+		
+	</style>
+	<body>
+		<div id="container">
+			<input type="button" id="backAll" value="重玩游戏"/>
+			<input type="button" id="backThis" value="重玩本关"/>
+			<input type="button" id="help" value="辅助方块"/>
+			<input type="button" id="status" value="游戏说明"/>
+			<div id="express">
+				<span id="myLevel">关卡：1</span>
+				<span id="myStep">步数：0</span>
+			</div>			
+			<div id="game">
+				<ul id="box">
+				</ul>
+			</div>
+		</div>
+	</body>
+</html>
+<script>
+	window.onload= function(){
+		var Obox = document.getElementById('box');
+		var Ostep = document.getElementById('myStep');
+		var Olevel = document.getElementById('myLevel');
+		var ObackAll = document.getElementById('backAll');
+		var ObackThis = document.getElementById('backThis');
+		var Ohelp = document.getElementById('help');
+		var Ostatus = document.getElementById('status');
+		var ObChild = document.getElementsByClassName('boxChild');
+		
+		var num = 3;
+		var Oli = [];
+		var flag = false;
+		var step = 0;
+		changeBox(num,Oli);
+		
+		//改变方块的个数
+		function changeBox(num,Oli){
+			let decent = num*5;
+			let real = 560-decent;
+			for(let i=0;i<num*num;i++){
+				let myLi = document.createElement('li');
+				myLi.classList.add("boxChild");
+				Oli.push(myLi);
+				Obox.appendChild(Oli[i]);
+				Oli[i].style.width = real/num +"px";
+				Oli[i].style.height = real/num +"px";
+				Oli[i].setAttribute("data-uid",i);
+				Oli[i].setAttribute("data-usta",0);
+				Oli[i].style.background = "#ea971f";
+				
+				run(Oli,i,num);
+			}
+			
+		}
+		
+		function run(Oli,i,num){
+			var obj = Oli[i];
+			obj.onclick= function(){
+				step ++;
+				Ostep.innerHTML = "步数："+step;
+				allLryb(i,Oli,num);
+				flag = exam(Oli,num);
+				if(flag){
+					num = num +1;
+					Olevel.innerHTML = `关卡：${num}`;
+					setTimeout(function(){changeBox(num,Oli);},300);
+				}
+			}
+		}
+		//改变颜色
+		function oneLryb(obj){
+			if(obj.getAttribute('data-usta') == 0){
+				obj.style.background = "#5283a3";
+				obj.setAttribute("data-usta",1);
+			}else if(obj.getAttribute('data-usta') == 1){
+				obj.style.background = "#ea971f";
+				obj.setAttribute("data-usta",0);
+			}
+		}
+		function allLryb(i,Oli,num){
+			var k = i;
+			for(let j=0;j<5;j++){
+				switch(j){
+					case 0: i = k;oneLryb(Oli[i]);break;
+					case 1:{
+						if(i%num-1>=0){
+							i = i-1;
+							oneLryb(Oli[i]);
+							i=k;
+						}else{
+							i=k;
+						}
+						break;
+					}
+					case 2:
+						if((i%num+1)<num){
+							i = i+1;
+							oneLryb(Oli[i]);
+							i=k;
+						}
+						break;
+					
+					case 3:
+						if(i-num >=0){
+							i = i-num;
+							oneLryb(Oli[i]);
+							i=k;
+						}
+						break;
+					case 4:
+						if(num*num >i+num){
+							i = i+num;
+							oneLryb(Oli[i]);
+							i=k;
+						}
+						break;
+				}
+			}
+		}
+		//检查是否所有方块都改变颜色
+		function exam(obj,num){
+			for(let i=0;i<num*num;i++){
+//				console.log(i);
+				if(obj[i].getAttribute('data-usta') !=1){
+					return false;
+				}else if(obj[i].getAttribute('data-usta') ==1 &&i+1==num*num){
+					return true;
+				}
+			}
+		}
+		
+		//“重玩游戏”按钮点击效果
+		ObackAll.onclick = function(){
+			for(let j=ObChild.length-1;j>0;j--){
+				ObChild[j].remove();
+			}
+			step = 0;
+			Ostep.innerHTML = "步数："+step;
+			num = 1;
+			Olevel.innerHTML = `关卡：${num}`;
+			changeBox(num,Oli);
+		}
+		//"重玩本关"按钮点击效果
+		ObackThis.onclick = function(){
+			let len = Math.sqrt(ObChild.length);
+			for(let j=ObChild.length-1;j>0;j--){
+				ObChild[j].remove();
+			}
+			changeBox(len,Oli);
+		}
+		//"游戏说明"按钮点击效果
+		Ostatus.onmouseenter = function(){
+			alert(`游戏说明\n点击方块,改变方块本身及相邻的方块\n所有方块颜色变成蓝色,即通关`)
+		}
+		//做一个随机数组，在结束之前随机从数组中取出一个数踩快
+		const items = [0,1,2,3,4,5,6,7,8];
+		const steps = [9];
+		function auto(Oli){
+			let item = items[Math.floor(Math.random()*items.length)];
+			if(item!=steps[steps.length-1]){
+				steps.push(item);
+			}
+			if(!flag){
+				setTimeout(function(){
+					
+					allLryb(item,Oli,3);
+					auto9(Oli);
+				},0);
+				flag = exam(Oli,3);
+			}else{
+				console.log(steps);
+			}
+		}
+		auto(Oli);
+	}
+		
+		
+	
+</script>
